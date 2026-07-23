@@ -3,10 +3,8 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const currentFile = fileURLToPath(import.meta.url);
-const currentDir = path.dirname(currentFile);
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(currentDir, '..');
-const port = Number(process.env.PORT || 4008);
 
 export const app = express();
 
@@ -32,9 +30,3 @@ app.get(/^(?!\/api).*/, (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(rootDir, 'public', 'index.html'));
 });
-
-if (process.argv[1] === currentFile) {
-  app.listen(port, '0.0.0.0', () => {
-    console.log(`caiwugongju running on port ${port}`);
-  });
-}
