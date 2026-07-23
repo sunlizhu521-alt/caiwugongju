@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'caiwugongju',
-      script: 'server/start.js',
+      script: 'server/app.js',
       cwd: __dirname,
       env: {
         NODE_ENV: 'production',

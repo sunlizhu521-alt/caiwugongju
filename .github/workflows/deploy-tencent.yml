@@ -40,8 +40,14 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Build frontend
+        run: npm run build
+
       - name: Create deployment package
         shell: bash
+        env:
+          ADMIN_INITIAL_PASSWORD: ${{ secrets.ADMIN_INITIAL_PASSWORD }}
+          ADMIN_NAME: ${{ secrets.ADMIN_NAME }}
         run: |
           set -euo pipefail
           tar \
@@ -56,6 +62,12 @@ jobs:
             printf 'PORT=%s\n' "$APP_PORT"
             printf 'DATA_DIR=%s/data\n' "$APP_DIR"
             printf 'BACKUP_DIR=%s/backups\n' "$APP_DIR"
+            if [ -n "$ADMIN_INITIAL_PASSWORD" ]; then
+              printf 'ADMIN_INITIAL_PASSWORD=%s\n' "$ADMIN_INITIAL_PASSWORD"
+            fi
+            if [ -n "$ADMIN_NAME" ]; then
+              printf 'ADMIN_NAME=%s\n' "$ADMIN_NAME"
+            fi
           } > "${APP_NAME}.env"
 
       - name: Configure SSH
@@ -91,6 +103,7 @@ jobs:
             BACKUP_FILE="$APP_DIR/backups/data-$(date +%Y%m%d-%H%M%S).tar.gz"
             tar -czf "$BACKUP_FILE" -C "$APP_DIR" data
             test -s "$BACKUP_FILE"
+            tar -tzf "$BACKUP_FILE" >/dev/null
             ls -lh "$BACKUP_FILE"
           fi
 
@@ -104,7 +117,7 @@ jobs:
           if pm2 describe "$APP_NAME" >/dev/null 2>&1; then
             pm2 delete "$APP_NAME"
           fi
-          pm2 start server/start.js --name "$APP_NAME"
+          pm2 start ecosystem.config.cjs --only "$APP_NAME" --update-env
 
           pm2 save
           HEALTH_OK=0
